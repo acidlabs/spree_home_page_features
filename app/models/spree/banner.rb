@@ -3,6 +3,8 @@ module Spree
     include GlobalID::Identification
     include Spree::Core::Engine.routes.url_helpers
 
+    default_scope { order("#{self.table_name}.position") }
+
     validates :title, presence: true, length: { minimum: 1 }
     validates :body,  presence: true, length: { minimum: 1 }, unless: :image
 
@@ -39,9 +41,9 @@ module Spree
 
     def image_styles
       if banner_category
-        { original: banner_category.size }
+        { thumb: "48x48>", original: banner_category.size }
       else
-        {}
+        { thumb: "48x48>" }
       end
     end
 

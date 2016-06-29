@@ -3,6 +3,19 @@ module Spree
     class BannersController < Spree::Admin::ResourceController
       before_action :load_data, except: [:index]
 
+      def update_positions
+        ActiveRecord::Base.transaction do
+          params[:positions].each do |id, index|
+            Spree::Banner.where(id: id).update_all(position: index)
+          end
+        end
+
+        respond_to do |format|
+          format.html { redirect_to admin_banners_url }
+          format.js { render text: 'Ok' }
+        end
+      end
+
       protected
 
       def load_data
@@ -12,11 +25,14 @@ module Spree
       end
 
       def collection
-        return @collection if @collection.present?
+        return @collection if defined?(@collection)
+        params[:q] = {} if params[:q].blank?
 
         @collection = super
-        @collection = @collection.page(params[:page]).
-                                  per(params[:per_page] || Spree::Config[:admin_products_per_page])
+        @search = @collection.ransack(params[:q])
+        @collection = @search.result(distinct: true).
+          page(params[:page]).
+          per(params[:per_page] || Spree::Config[:admin_products_per_page])
 
         @collection
       end
