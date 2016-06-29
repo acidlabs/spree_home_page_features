@@ -4,6 +4,42 @@
   <%= plural_resource_name(Spree::Banner) %>
 <% end %>
 
+<% content_for :table_filter do %>
+  <div data-hook="admin_banners_index_search">
+    <%= search_form_for [:admin, @search], url: spree.admin_banners_url do |f| %>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <%= f.label Spree::Banner.human_attribute_name(:title) %>
+            <%= f.text_field :title_cont, class: "form-control js-quick-search-target" %>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="form-group">
+            <%= f.label Spree.t(:banner_category) %>
+            <%= f.select :banner_category_name_eq, Spree::BannerCategory.all.map {|b| [b.name]}, {:include_blank => true}, :class => 'select2 js-filterable' %>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="form-group">
+            <div class="checkbox">
+              <%= label_tag 'q_publish_eq' do %>
+                <%= f.check_box :publish_eq, {:checked => (params[:q][:publish_eq] == '1')}, '1', '' %>
+                <%= Spree::Banner.human_attribute_name(:publish) %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-hook="admin_banners_index_search_buttons" class="form-actions">
+        <%= button Spree.t(:filter_results), 'search' %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
 <% content_for :page_actions do %>
   <%= button_link_to Spree.t(:new_banner), new_object_url, { :class => "btn-success", :icon => 'add', :id => 'admin_new_banner' } %>
 <% end if can?(:create, Spree::Banner) %>
@@ -11,23 +47,29 @@
 <%= render partial: 'spree/admin/shared/index_table_options', locals: { collection: @collection } %>
 
 <% if @collection.any? %>
-  <table class="table" id='listing_banners'>
+  <table class="table sortable" id='listing_banners' data-sortable-link='<%= update_positions_admin_banners_url %>'>
     <thead>
       <tr data-hook="admin_banners_index_headers">
+        <th class="no-border"></th>
         <th><%= Spree::Banner.human_attribute_name(:title) %></th>
         <th><%= Spree::Banner.human_attribute_name(:style) %></th>
         <th><%= Spree::Banner.human_attribute_name(:banner_category) %></th>
         <th><%= Spree::Banner.human_attribute_name(:publish) %></th>
+        <th><%= Spree.t(:preview) %></th>
         <th data-hook="admin_banners_index_header_actions" class="actions"></th>
       </tr>
     </thead>
     <tbody>
       <% @collection.each do |banner| %>
         <tr id="<%= spree_dom_id banner %>" data-hook="admin_banners_index_rows" class="<%= cycle('odd', 'even') %>">
+          <td class="move-handle text-center">
+            <span class="icon icon-move handle"></span>
+          </td>
           <td><%= banner.title %></td>
           <td><%= banner.style.present? ? banner.style.humanize : Spree.t(:none) %></td>
           <td><%= banner.banner_category_name %></td>
           <td><%= banner.publish_icon %></td>
+          <td><%= image_tag banner.image.url(:thumb) if banner.image.exists? %></td>
           <td class="actions actions-3 text-right" data-hook="admin_banners_index_row_actions">
             <%= link_to_edit banner, no_text: true, class: 'edit' if can?(:edit, banner) %>
             <%= link_to_delete banner, no_text: true if can?(:delete, banner) %>

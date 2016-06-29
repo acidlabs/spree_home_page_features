@@ -1,6 +1,6 @@
 module Spree
   class BannerCategory < ActiveRecord::Base
-    has_many :banners
+    has_many :banners, -> { order(:position) }
 
     validates :name, presence: true
     validates :size, presence: true
