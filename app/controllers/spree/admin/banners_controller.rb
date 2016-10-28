@@ -6,7 +6,8 @@ module Spree
       def update_positions
         ActiveRecord::Base.transaction do
           params[:positions].each do |id, index|
-            Spree::Banner.where(id: id).update_all(position: index)
+            Spree::Banner.find(id).update_column(:position, index)
+            Spree::Banner.find(id).touch
           end
         end
 
